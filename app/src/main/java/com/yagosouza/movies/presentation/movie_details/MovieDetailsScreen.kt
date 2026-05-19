@@ -43,23 +43,27 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
+import com.yagosouza.movies.domain.model.Genre
 import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.presentation.components.ErrorState
 import com.yagosouza.movies.presentation.components.IconInfoRow
 import com.yagosouza.movies.presentation.components.LoadingState
 import com.yagosouza.movies.presentation.components.VoteAverage
+import com.yagosouza.movies.presentation.theme.MoviesTheme
 
 private const val BACKDROP_ASPECT_RATIO = 16f / 9f
 private const val POSTER_ASPECT_RATIO = 2f / 3f
 private const val GRADIENT_START_Y = 200f
 private const val GRADIENT_ALPHA = 0.7f
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MovieDetailsScreen(
     onBackClick: () -> Unit,
@@ -67,6 +71,20 @@ fun MovieDetailsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    MovieDetailsContent(
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onRetry = { uiState.movie?.id?.let { viewModel.loadMovieDetails(it) } },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MovieDetailsContent(
+    uiState: MovieDetailsUiState,
+    onBackClick: () -> Unit,
+    onRetry: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -103,15 +121,13 @@ fun MovieDetailsScreen(
                 }
                 uiState.errorMessage != null -> {
                     ErrorState(
-                        message = uiState.errorMessage.orEmpty(),
-                        onRetry = {
-                            uiState.movie?.id?.let { viewModel.loadMovieDetails(it) }
-                        },
+                        message = uiState.errorMessage,
+                        onRetry = onRetry,
                     )
                 }
                 uiState.movie != null -> {
-                    val movie = uiState.movie ?: return@Scaffold
-                    MovieDetailsContent(movie = movie)
+                    val movie = uiState.movie
+                    MovieDetailsBody(movie = movie)
                 }
             }
         }
@@ -120,7 +136,7 @@ fun MovieDetailsScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun MovieDetailsContent(movie: Movie) {
+private fun MovieDetailsBody(movie: Movie) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -253,3 +269,43 @@ private fun MovieDetailsContent(movie: Movie) {
     }
 }
 
+// Preview
+
+private class MovieDetailsUiStateProvider : PreviewParameterProvider<MovieDetailsUiState> {
+    override val values = sequenceOf(
+        MovieDetailsUiState(isLoading = true),
+        MovieDetailsUiState(
+            movie = Movie(
+                id = 1,
+                title = "Filme Exemplo",
+                overview = "Uma sinopse detalhada do filme exemplo para demonstrar como o texto aparece na tela de detalhes do filme.",
+                posterPath = null,
+                backdropPath = null,
+                voteAverage = 8.5,
+                releaseDate = "2024-01-15",
+                genres = listOf(
+                    Genre(id = 1, name = "Acao"),
+                    Genre(id = 2, name = "Aventura"),
+                    Genre(id = 3, name = "Ficcao Cientifica"),
+                ),
+                runtime = 148,
+                tagline = "Uma tagline memoravel do filme",
+            ),
+        ),
+        MovieDetailsUiState(errorMessage = "Sem conexao com a internet"),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MovieDetailsContentPreview(
+    @PreviewParameter(MovieDetailsUiStateProvider::class) uiState: MovieDetailsUiState,
+) {
+    MoviesTheme(dynamicColor = false) {
+        MovieDetailsContent(
+            uiState = uiState,
+            onBackClick = {},
+            onRetry = {},
+        )
+    }
+}
