@@ -15,7 +15,7 @@ class GetPopularMoviesUseCase(
             val movies = repository.getPopularMovies(page)
             emit(Resource.Success(movies))
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Erro ao carregar filmes", e))
+            emit(Resource.Error(e.message.orEmpty(), e))
         }
     }
 }

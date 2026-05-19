@@ -15,7 +15,7 @@ class GetMovieDetailsUseCase(
             val movie = repository.getMovieDetails(movieId)
             emit(Resource.Success(movie))
         } catch (e: Exception) {
-            emit(Resource.Error(e.message ?: "Erro ao carregar detalhes", e))
+            emit(Resource.Error(e.message.orEmpty(), e))
         }
     }
 }

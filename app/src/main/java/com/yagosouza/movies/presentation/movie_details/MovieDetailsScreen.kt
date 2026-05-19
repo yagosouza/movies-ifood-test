@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,15 +42,23 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.domain.model.Movie
+import com.yagosouza.movies.presentation.components.ErrorState
 import com.yagosouza.movies.presentation.theme.Yellow500
+
+private const val BACKDROP_ASPECT_RATIO = 16f / 9f
+private const val POSTER_ASPECT_RATIO = 2f / 3f
+private const val GRADIENT_START_Y = 200f
+private const val GRADIENT_ALPHA = 0.7f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +73,7 @@ fun MovieDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = uiState.movie?.title ?: "",
+                        text = uiState.movie?.title.orEmpty(),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -75,7 +82,7 @@ fun MovieDetailsScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar",
+                            contentDescription = stringResource(R.string.navigate_back),
                         )
                     }
                 },
@@ -99,16 +106,16 @@ fun MovieDetailsScreen(
                     )
                 }
                 uiState.errorMessage != null -> {
-                    ErrorContent(
-                        message = uiState.errorMessage!!,
+                    ErrorState(
+                        message = uiState.errorMessage.orEmpty(),
                         onRetry = {
                             uiState.movie?.id?.let { viewModel.loadMovieDetails(it) }
                         },
-                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
                 uiState.movie != null -> {
-                    MovieDetailsContent(movie = uiState.movie!!)
+                    val movie = uiState.movie ?: return@Scaffold
+                    MovieDetailsContent(movie = movie)
                 }
             }
         }
@@ -130,17 +137,17 @@ private fun MovieDetailsContent(movie: Movie) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f),
+                    .aspectRatio(BACKDROP_ASPECT_RATIO),
             )
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
+                    .aspectRatio(BACKDROP_ASPECT_RATIO)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)),
-                            startY = 200f,
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = GRADIENT_ALPHA)),
+                            startY = GRADIENT_START_Y,
                         )
                     ),
             )
@@ -150,17 +157,20 @@ private fun MovieDetailsContent(movie: Movie) {
                 contentDescription = movie.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .width(120.dp)
-                    .aspectRatio(2f / 3f)
+                    .width(dimensionResource(R.dimen.poster_overlay_width))
+                    .aspectRatio(POSTER_ASPECT_RATIO)
                     .align(Alignment.BottomStart)
-                    .offset(x = 16.dp, y = 40.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .offset(
+                        x = dimensionResource(R.dimen.spacing_lg),
+                        y = dimensionResource(R.dimen.poster_overlay_offset_y),
+                    )
+                    .clip(RoundedCornerShape(dimensionResource(R.dimen.poster_corner_radius))),
             )
         }
 
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_xxl)))
 
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+        Column(modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing_lg))) {
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.headlineMedium,
@@ -169,7 +179,7 @@ private fun MovieDetailsContent(movie: Movie) {
 
             val tagline = movie.tagline
             if (!tagline.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_xs)))
                 Text(
                     text = tagline,
                     style = MaterialTheme.typography.bodyMedium,
@@ -178,10 +188,10 @@ private fun MovieDetailsContent(movie: Movie) {
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_md)))
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_lg)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -189,27 +199,28 @@ private fun MovieDetailsContent(movie: Movie) {
                         imageVector = Icons.Filled.Star,
                         contentDescription = null,
                         tint = Yellow500,
-                        modifier = Modifier.size(20.dp),
+                        modifier = Modifier.size(dimensionResource(R.dimen.icon_lg)),
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
                     Text(
-                        text = String.format("%.1f", movie.voteAverage),
+                        text = stringResource(R.string.vote_average_format, movie.voteAverage),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onBackground,
                     )
                 }
 
-                if (movie.runtime != null) {
+                val runtime = movie.runtime
+                if (runtime != null) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.AccessTime,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_md)),
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
                         Text(
-                            text = "${movie.runtime} min",
+                            text = stringResource(R.string.runtime_format, runtime),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -222,9 +233,9 @@ private fun MovieDetailsContent(movie: Movie) {
                             imageVector = Icons.Filled.CalendarToday,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(dimensionResource(R.dimen.icon_md)),
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
                         Text(
                             text = movie.releaseDate,
                             style = MaterialTheme.typography.bodyMedium,
@@ -235,10 +246,10 @@ private fun MovieDetailsContent(movie: Movie) {
             }
 
             if (movie.genres.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_md)))
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_sm)),
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_xs)),
                 ) {
                     movie.genres.forEach { genre ->
                         AssistChip(
@@ -254,45 +265,24 @@ private fun MovieDetailsContent(movie: Movie) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_lg)))
 
             Text(
-                text = "Sinopse",
+                text = stringResource(R.string.synopsis_title),
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_sm)))
 
             Text(
-                text = movie.overview.ifBlank { "Sinopse não disponível." },
+                text = movie.overview.ifBlank { stringResource(R.string.synopsis_unavailable) },
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_xl)))
         }
     }
 }
 
-@Composable
-private fun ErrorContent(
-    message: String,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.error,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRetry) {
-            Text("Tentar Novamente")
-        }
-    }
-}

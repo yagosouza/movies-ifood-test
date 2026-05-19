@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,14 +41,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
+import com.yagosouza.movies.presentation.components.ErrorState
 import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.presentation.theme.Yellow500
+
+private const val POSTER_ASPECT_RATIO = 2f / 3f
+private const val TITLE_MAX_LINES = 2
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,7 +68,7 @@ fun MoviesListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Filmes Populares") },
+                title = { Text(text = stringResource(R.string.movies_list_title)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface,
@@ -78,7 +84,7 @@ fun MoviesListScreen(
             when {
                 uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
                 uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
-                    message = uiState.errorMessage!!,
+                    message = uiState.errorMessage.orEmpty(),
                     onRetry = viewModel::loadMovies,
                 )
                 else -> MoviesGrid(
@@ -100,11 +106,13 @@ private fun MoviesGrid(
     onLoadMore: () -> Unit,
 ) {
     val gridState = rememberLazyGridState()
+    val gridColumns = integerResource(R.integer.grid_columns)
+    val prefetchThreshold = integerResource(R.integer.grid_prefetch_threshold)
 
     val shouldLoadMore by remember {
         derivedStateOf {
             val lastVisibleIndex = gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            lastVisibleIndex >= movies.size - 6
+            lastVisibleIndex >= movies.size - prefetchThreshold
         }
     }
 
@@ -112,27 +120,30 @@ private fun MoviesGrid(
         if (shouldLoadMore) onLoadMore()
     }
 
+    val gridPadding = dimensionResource(R.dimen.spacing_lg)
+    val gridSpacing = dimensionResource(R.dimen.spacing_md)
+
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(gridColumns),
         state = gridState,
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(gridPadding),
+        horizontalArrangement = Arrangement.spacedBy(gridSpacing),
+        verticalArrangement = Arrangement.spacedBy(gridSpacing),
     ) {
         items(movies, key = { it.id }) { movie ->
             MovieCard(movie = movie, onClick = { onMovieClick(movie.id) })
         }
 
         if (isLoadingMore) {
-            item(span = { GridItemSpan(2) }) {
+            item(span = { GridItemSpan(gridColumns) }) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(dimensionResource(R.dimen.spacing_lg)),
                     contentAlignment = Alignment.Center,
                 ) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(dimensionResource(R.dimen.icon_loading)),
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -146,12 +157,16 @@ private fun MovieCard(
     movie: Movie,
     onClick: () -> Unit,
 ) {
+    val cornerRadius = dimensionResource(R.dimen.card_corner_radius)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(cornerRadius),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = dimensionResource(R.dimen.card_elevation),
+        ),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -163,31 +178,31 @@ private fun MovieCard(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                    .aspectRatio(POSTER_ASPECT_RATIO)
+                    .clip(RoundedCornerShape(topStart = cornerRadius, topEnd = cornerRadius)),
             )
 
-            Column(modifier = Modifier.padding(12.dp)) {
+            Column(modifier = Modifier.padding(dimensionResource(R.dimen.spacing_md))) {
                 Text(
                     text = movie.title,
                     style = MaterialTheme.typography.titleMedium,
-                    maxLines = 2,
+                    maxLines = TITLE_MAX_LINES,
                     overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.spacing_xs)))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.Star,
                         contentDescription = null,
                         tint = Yellow500,
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(dimensionResource(R.dimen.icon_sm)),
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
                     Text(
-                        text = String.format("%.1f", movie.voteAverage),
+                        text = stringResource(R.string.vote_average_format, movie.voteAverage),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -207,25 +222,3 @@ private fun LoadingState() {
     }
 }
 
-@Composable
-private fun ErrorState(
-    message: String,
-    onRetry: () -> Unit,
-) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(onClick = onRetry) {
-                Text("Tentar Novamente")
-            }
-        }
-    }
-}

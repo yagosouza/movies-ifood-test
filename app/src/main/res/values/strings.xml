@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Movies</string>
+
+    <!-- Movies List -->
+    <string name="movies_list_title">Filmes Populares</string>
+    <string name="retry_button">Tentar Novamente</string>
+
+    <!-- Movie Details -->
+    <string name="navigate_back">Voltar</string>
+    <string name="synopsis_title">Sinopse</string>
+    <string name="synopsis_unavailable">Sinopse não disponível.</string>
+    <string name="runtime_format">%1$d min</string>
+    <string name="vote_average_format">%1$.1f</string>
+
+    <!-- Errors -->
+    <string name="error_load_movies">Erro ao carregar filmes</string>
+    <string name="error_load_details">Erro ao carregar detalhes</string>
 </resources>
