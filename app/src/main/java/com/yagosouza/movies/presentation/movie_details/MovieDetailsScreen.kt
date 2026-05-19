@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,9 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,7 +50,9 @@ import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.presentation.components.ErrorState
-import com.yagosouza.movies.presentation.theme.Yellow500
+import com.yagosouza.movies.presentation.components.IconInfoRow
+import com.yagosouza.movies.presentation.components.LoadingState
+import com.yagosouza.movies.presentation.components.VoteAverage
 
 private const val BACKDROP_ASPECT_RATIO = 16f / 9f
 private const val POSTER_ASPECT_RATIO = 2f / 3f
@@ -100,10 +99,7 @@ fun MovieDetailsScreen(
         ) {
             when {
                 uiState.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    LoadingState()
                 }
                 uiState.errorMessage != null -> {
                     ErrorState(
@@ -194,54 +190,25 @@ private fun MovieDetailsContent(movie: Movie) {
                 horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_lg)),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Star,
-                        contentDescription = null,
-                        tint = Yellow500,
-                        modifier = Modifier.size(dimensionResource(R.dimen.icon_lg)),
-                    )
-                    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
-                    Text(
-                        text = stringResource(R.string.vote_average_format, movie.voteAverage),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                }
+                VoteAverage(
+                    voteAverage = movie.voteAverage,
+                    iconSize = dimensionResource(R.dimen.icon_lg),
+                    textStyle = MaterialTheme.typography.titleMedium,
+                )
 
                 val runtime = movie.runtime
                 if (runtime != null) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.AccessTime,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(dimensionResource(R.dimen.icon_md)),
-                        )
-                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
-                        Text(
-                            text = stringResource(R.string.runtime_format, runtime),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    IconInfoRow(
+                        icon = Icons.Filled.AccessTime,
+                        text = stringResource(R.string.runtime_format, runtime),
+                    )
                 }
 
                 if (movie.releaseDate.isNotBlank()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.CalendarToday,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(dimensionResource(R.dimen.icon_md)),
-                        )
-                        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_xs)))
-                        Text(
-                            text = movie.releaseDate,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    IconInfoRow(
+                        icon = Icons.Filled.CalendarToday,
+                        text = movie.releaseDate,
+                    )
                 }
             }
 
