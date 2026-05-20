@@ -8,12 +8,19 @@ Desenvolvi esse projeto focando em boas práticas de arquitetura e organização
 
 ## Screenshots
 
-> TODO: adicionar screenshots do app
+<img width="108" height="234" alt="image" src="https://github.com/user-attachments/assets/751395e3-2611-472e-8edf-91514b870604" />
+
+<img width="108" height="234" alt="image" src="https://github.com/user-attachments/assets/f504fc09-5b24-488c-8f48-45c730e67143" />
+
+<img width="108" height="234" alt="image" src="https://github.com/user-attachments/assets/60e1e514-0833-4a27-a12a-fafaaf48a97e" />
+
+<img width="108" height="234" alt="image" src="https://github.com/user-attachments/assets/bca44723-3080-40d7-8fc9-6635a5b9a992" />
+
 
 ## Funcionalidades
 
 - Listagem de filmes com filtros por categoria (Populares, Em Cartaz, Mais Votados, Em Breve)
-- Busca de filmes pelo teclado (sem debounce — busca ao clicar "Buscar" no teclado)
+- Busca de filmes
 - Favoritos salvos localmente com Room (persistem offline)
 - Tela de detalhes com sinopse, gêneros, duração e nota
 - Paginação infinita na listagem e na busca
@@ -30,7 +37,7 @@ Projeto multi-módulo com Clean Architecture em 3 camadas:
 :app     → Compose UI, ViewModels, Hilt, navegação
 ```
 
-Cada módulo tem sua responsabilidade bem definida. O `:domain` é Kotlin puro — não conhece Android, Retrofit nem Room. Isso facilita testar e trocar implementações sem impacto nas regras de negócio.
+Cada módulo tem sua responsabilidade bem definida. O `:domain` é Kotlin puro e não conhece Android, Retrofit nem Room. Isso facilita testar e trocar implementações sem impacto nas regras de negócio.
 
 ### Fluxo de dados
 
