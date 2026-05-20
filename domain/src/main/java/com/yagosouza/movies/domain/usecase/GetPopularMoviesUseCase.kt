@@ -1,6 +1,7 @@
 package com.yagosouza.movies.domain.usecase
 
 import com.yagosouza.movies.domain.Resource
+import com.yagosouza.movies.domain.exception.ErrorMapper
 import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.domain.model.MovieCategory
 import com.yagosouza.movies.domain.repository.MovieRepository
@@ -19,7 +20,7 @@ class GetPopularMoviesUseCase(
             val movies = repository.getMoviesByCategory(category, page)
             emit(Resource.Success(movies))
         } catch (e: Exception) {
-            emit(Resource.Error(e.message.orEmpty(), e))
+            emit(Resource.Error(ErrorMapper.map(e), e))
         }
     }
 }
