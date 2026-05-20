@@ -3,6 +3,7 @@ package com.yagosouza.movies.presentation.movies_list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.yagosouza.movies.domain.Resource
+import com.yagosouza.movies.domain.model.MovieCategory
 import com.yagosouza.movies.domain.usecase.GetPopularMoviesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ class MoviesListViewModel @Inject constructor(
     }
 
     fun loadMovies() {
-        getPopularMoviesUseCase(page = 1).onEach { result ->
+        val category = _uiState.value.selectedCategory
+        getPopularMoviesUseCase(category = category, page = 1).onEach { result ->
             when (result) {
                 is Resource.Loading -> _uiState.update {
                     it.copy(isLoading = true, errorMessage = null)
@@ -46,12 +48,25 @@ class MoviesListViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    fun onCategorySelected(category: MovieCategory) {
+        if (category == _uiState.value.selectedCategory) return
+        _uiState.update {
+            it.copy(
+                selectedCategory = category,
+                movies = emptyList(),
+                currentPage = 1,
+                hasReachedEnd = false,
+            )
+        }
+        loadMovies()
+    }
+
     fun loadNextPage() {
         val state = _uiState.value
         if (state.isLoadingMore || state.hasReachedEnd) return
 
         val nextPage = state.currentPage + 1
-        getPopularMoviesUseCase(page = nextPage).onEach { result ->
+        getPopularMoviesUseCase(category = state.selectedCategory, page = nextPage).onEach { result ->
             when (result) {
                 is Resource.Loading -> _uiState.update {
                     it.copy(isLoadingMore = true)

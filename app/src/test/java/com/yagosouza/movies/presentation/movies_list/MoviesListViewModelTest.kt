@@ -3,6 +3,7 @@ package com.yagosouza.movies.presentation.movies_list
 import app.cash.turbine.test
 import com.yagosouza.movies.domain.Resource
 import com.yagosouza.movies.domain.model.Movie
+import com.yagosouza.movies.domain.model.MovieCategory
 import com.yagosouza.movies.domain.usecase.GetPopularMoviesUseCase
 import io.mockk.every
 import io.mockk.mockk
@@ -51,7 +52,9 @@ class MoviesListViewModelTest {
                 releaseDate = "2024-01-01",
             ),
         )
-        every { getPopularMoviesUseCase(page = 1) } returns flowOf(
+        every {
+            getPopularMoviesUseCase(category = MovieCategory.POPULAR, page = 1)
+        } returns flowOf(
             Resource.Loading,
             Resource.Success(movies),
         )
@@ -74,7 +77,9 @@ class MoviesListViewModelTest {
 
     @Test
     fun `initial load updates state to Error on failure`() = runTest {
-        every { getPopularMoviesUseCase(page = 1) } returns flowOf(
+        every {
+            getPopularMoviesUseCase(category = MovieCategory.POPULAR, page = 1)
+        } returns flowOf(
             Resource.Loading,
             Resource.Error("Network error"),
         )
@@ -89,6 +94,45 @@ class MoviesListViewModelTest {
             assertFalse(errorState.isLoading)
             assertEquals("Network error", errorState.errorMessage)
             assertTrue(errorState.movies.isEmpty())
+        }
+    }
+
+    @Test
+    fun `onCategorySelected changes category and reloads`() = runTest {
+        every {
+            getPopularMoviesUseCase(category = MovieCategory.POPULAR, page = 1)
+        } returns flowOf(Resource.Loading, Resource.Success(emptyList()))
+
+        val topRatedMovies = listOf(
+            Movie(
+                id = 2,
+                title = "Top Rated Movie",
+                overview = "Overview",
+                posterPath = null,
+                backdropPath = null,
+                voteAverage = 9.0,
+                releaseDate = "2024-01-01",
+            ),
+        )
+        every {
+            getPopularMoviesUseCase(category = MovieCategory.TOP_RATED, page = 1)
+        } returns flowOf(
+            Resource.Loading,
+            Resource.Success(topRatedMovies),
+        )
+
+        val viewModel = MoviesListViewModel(getPopularMoviesUseCase)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.onCategorySelected(MovieCategory.TOP_RATED)
+
+        viewModel.uiState.test {
+            testDispatcher.scheduler.advanceUntilIdle()
+
+            val state = expectMostRecentItem()
+            assertEquals(MovieCategory.TOP_RATED, state.selectedCategory)
+            assertEquals(1, state.movies.size)
+            assertEquals("Top Rated Movie", state.movies[0].title)
         }
     }
 }

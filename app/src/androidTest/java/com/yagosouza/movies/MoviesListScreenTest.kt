@@ -1,6 +1,7 @@
 package com.yagosouza.movies
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import com.yagosouza.movies.domain.model.Movie
@@ -57,5 +58,40 @@ class MoviesListScreenTest {
         }
 
         composeTestRule.onNodeWithText("Erro de conexao").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsCategoryChips() {
+        composeTestRule.setContent {
+            MoviesTheme(dynamicColor = false) {
+                MoviesListContent(
+                    uiState = MoviesListUiState(),
+                    onMovieClick = {},
+                    onRetry = {},
+                    onLoadMore = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Populares").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Em Cartaz").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Mais Votados").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Em Breve").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsPopularChipSelected_byDefault() {
+        composeTestRule.setContent {
+            MoviesTheme(dynamicColor = false) {
+                MoviesListContent(
+                    uiState = MoviesListUiState(),
+                    onMovieClick = {},
+                    onRetry = {},
+                    onLoadMore = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithText("Populares").assertIsSelected()
     }
 }

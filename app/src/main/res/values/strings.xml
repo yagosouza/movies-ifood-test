@@ -3,7 +3,11 @@
     <string name="app_name">Movies</string>
 
     <!-- Movies List -->
-    <string name="movies_list_title">Filmes Populares</string>
+    <string name="movies_list_title">Filmes</string>
+    <string name="category_popular">Populares</string>
+    <string name="category_now_playing">Em Cartaz</string>
+    <string name="category_top_rated">Mais Votados</string>
+    <string name="category_upcoming">Em Breve</string>
     <string name="retry_button">Tentar Novamente</string>
 
     <!-- Movie Details -->

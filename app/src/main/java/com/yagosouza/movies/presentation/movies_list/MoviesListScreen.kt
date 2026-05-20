@@ -12,15 +12,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -44,6 +49,7 @@ import coil3.compose.AsyncImage
 import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.domain.model.Movie
+import com.yagosouza.movies.domain.model.MovieCategory
 import com.yagosouza.movies.presentation.components.ErrorState
 import com.yagosouza.movies.presentation.components.LoadingState
 import com.yagosouza.movies.presentation.components.VoteAverage
@@ -64,6 +70,7 @@ fun MoviesListScreen(
         onMovieClick = onMovieClick,
         onRetry = viewModel::loadMovies,
         onLoadMore = viewModel::loadNextPage,
+        onCategorySelected = viewModel::onCategorySelected,
     )
 }
 
@@ -73,22 +80,81 @@ fun MoviesListContent(
     onMovieClick: (Int) -> Unit,
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
+    onCategorySelected: (MovieCategory) -> Unit = {},
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
-            uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
-                message = uiState.errorMessage,
-                onRetry = onRetry,
-            )
-            else -> MoviesGrid(
-                movies = uiState.movies,
-                isLoadingMore = uiState.isLoadingMore,
-                onMovieClick = onMovieClick,
-                onLoadMore = onLoadMore,
+    Column(modifier = Modifier.fillMaxSize()) {
+        CategoryChips(
+            selectedCategory = uiState.selectedCategory,
+            onCategorySelected = onCategorySelected,
+        )
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            when {
+                uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
+                uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
+                    message = uiState.errorMessage,
+                    onRetry = onRetry,
+                )
+                else -> MoviesGrid(
+                    movies = uiState.movies,
+                    isLoadingMore = uiState.isLoadingMore,
+                    onMovieClick = onMovieClick,
+                    onLoadMore = onLoadMore,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryChips(
+    selectedCategory: MovieCategory,
+    onCategorySelected: (MovieCategory) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val categories = remember {
+        listOf(
+            MovieCategory.POPULAR,
+            MovieCategory.NOW_PLAYING,
+            MovieCategory.TOP_RATED,
+            MovieCategory.UPCOMING,
+        )
+    }
+
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(
+            horizontal = dimensionResource(R.dimen.spacing_lg),
+            vertical = dimensionResource(R.dimen.spacing_sm),
+        ),
+        horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing_sm)),
+    ) {
+        items(categories) { category ->
+            val selected = category == selectedCategory
+
+            FilterChip(
+                selected = selected,
+                onClick = { onCategorySelected(category) },
+                label = {
+                    Text(
+                        text = stringResource(category.labelResId()),
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                ),
             )
         }
     }
+}
+
+private fun MovieCategory.labelResId(): Int = when (this) {
+    MovieCategory.POPULAR -> R.string.category_popular
+    MovieCategory.NOW_PLAYING -> R.string.category_now_playing
+    MovieCategory.TOP_RATED -> R.string.category_top_rated
+    MovieCategory.UPCOMING -> R.string.category_upcoming
 }
 
 @Composable

@@ -6,6 +6,7 @@ import com.yagosouza.movies.data.remote.dto.GenreDto
 import com.yagosouza.movies.data.remote.dto.MovieDetailDto
 import com.yagosouza.movies.data.remote.dto.MovieDto
 import com.yagosouza.movies.data.remote.dto.MovieListResponse
+import com.yagosouza.movies.domain.model.MovieCategory
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -76,6 +77,32 @@ class MovieRepositoryImplTest {
         assertEquals(1, result.genres.size)
         assertEquals("Action", result.genres[0].name)
         assertEquals(150, result.runtime)
+    }
+
+    @Test
+    fun `getMoviesByCategory calls correct API endpoint`() = runTest {
+        val response = MovieListResponse(
+            page = 1,
+            results = listOf(
+                MovieDto(
+                    id = 10,
+                    title = "Now Playing Film",
+                    overview = "Overview",
+                    posterPath = null,
+                    backdropPath = null,
+                    voteAverage = 7.5,
+                    releaseDate = "2024-06-01",
+                ),
+            ),
+            totalPages = 1,
+            totalResults = 1,
+        )
+        coEvery { api.getNowPlayingMovies(1) } returns response
+
+        val result = repository.getMoviesByCategory(MovieCategory.NOW_PLAYING, 1)
+
+        assertEquals(1, result.size)
+        assertEquals("Now Playing Film", result[0].title)
     }
 
     @Test

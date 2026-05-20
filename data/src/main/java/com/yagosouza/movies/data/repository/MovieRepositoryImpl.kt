@@ -5,6 +5,7 @@ import com.yagosouza.movies.data.mapper.toDomain
 import com.yagosouza.movies.data.mapper.toEntity
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.domain.model.Movie
+import com.yagosouza.movies.domain.model.MovieCategory
 import com.yagosouza.movies.domain.repository.MovieRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,6 +18,16 @@ class MovieRepositoryImpl @Inject constructor(
 
     override suspend fun getPopularMovies(page: Int): List<Movie> {
         return api.getPopularMovies(page).results.map { it.toDomain() }
+    }
+
+    override suspend fun getMoviesByCategory(category: MovieCategory, page: Int): List<Movie> {
+        val response = when (category) {
+            MovieCategory.POPULAR -> api.getPopularMovies(page)
+            MovieCategory.NOW_PLAYING -> api.getNowPlayingMovies(page)
+            MovieCategory.TOP_RATED -> api.getTopRatedMovies(page)
+            MovieCategory.UPCOMING -> api.getUpcomingMovies(page)
+        }
+        return response.results.map { it.toDomain() }
     }
 
     override suspend fun getMovieDetails(movieId: Int): Movie {
