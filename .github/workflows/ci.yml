@@ -11,6 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Configure git line endings
+        run: git config --global core.autocrlf input
+
       - name: Checkout code
         uses: actions/checkout@v4
 
