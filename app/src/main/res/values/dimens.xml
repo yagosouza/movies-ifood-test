@@ -12,11 +12,15 @@
     <dimen name="card_corner_radius">12dp</dimen>
     <dimen name="card_elevation">4dp</dimen>
 
+    <!-- Search -->
+    <dimen name="search_corner_radius">28dp</dimen>
+
     <!-- Icons -->
     <dimen name="icon_sm">16dp</dimen>
     <dimen name="icon_md">18dp</dimen>
     <dimen name="icon_lg">20dp</dimen>
     <dimen name="icon_loading">32dp</dimen>
+    <dimen name="icon_empty_state">64dp</dimen>
 
     <!-- Movie Details -->
     <dimen name="poster_overlay_width">120dp</dimen>

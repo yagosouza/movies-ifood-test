@@ -13,6 +13,24 @@
     <string name="runtime_format">%1$d min</string>
     <string name="vote_average_format">%1$.1f</string>
 
+    <!-- Search -->
+    <string name="search_placeholder">Buscar filmes…</string>
+    <string name="search_clear">Limpar busca</string>
+    <string name="search_prompt">Busque por filmes pelo nome</string>
+
+    <!-- Favorites -->
+    <string name="add_favorite">Adicionar aos favoritos</string>
+    <string name="remove_favorite">Remover dos favoritos</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Início</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_favorites">Favoritos</string>
+
+    <!-- Empty States -->
+    <string name="empty_search_results">Nenhum filme encontrado</string>
+    <string name="empty_favorites">Nenhum favorito ainda</string>
+
     <!-- Errors -->
     <string name="error_load_movies">Erro ao carregar filmes</string>
     <string name="error_load_details">Erro ao carregar detalhes</string>

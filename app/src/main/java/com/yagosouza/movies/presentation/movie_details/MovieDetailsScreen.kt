@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -75,6 +77,7 @@ fun MovieDetailsScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onRetry = { uiState.movie?.id?.let { viewModel.loadMovieDetails(it) } },
+        onToggleFavorite = viewModel::toggleFavorite,
     )
 }
 
@@ -84,6 +87,7 @@ fun MovieDetailsContent(
     uiState: MovieDetailsUiState,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
+    onToggleFavorite: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -101,6 +105,28 @@ fun MovieDetailsContent(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.navigate_back),
                         )
+                    }
+                },
+                actions = {
+                    if (uiState.movie != null) {
+                        IconButton(onClick = onToggleFavorite) {
+                            Icon(
+                                imageVector = if (uiState.isFavorite) {
+                                    Icons.Filled.Favorite
+                                } else {
+                                    Icons.Filled.FavoriteBorder
+                                },
+                                contentDescription = stringResource(
+                                    if (uiState.isFavorite) R.string.remove_favorite
+                                    else R.string.add_favorite,
+                                ),
+                                tint = if (uiState.isFavorite) {
+                                    MaterialTheme.colorScheme.error
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -275,6 +301,7 @@ private class MovieDetailsUiStateProvider : PreviewParameterProvider<MovieDetail
     override val values = sequenceOf(
         MovieDetailsUiState(isLoading = true),
         MovieDetailsUiState(
+            isFavorite = true,
             movie = Movie(
                 id = 1,
                 title = "Filme Exemplo",
@@ -306,6 +333,7 @@ private fun MovieDetailsContentPreview(
             uiState = uiState,
             onBackClick = {},
             onRetry = {},
+            onToggleFavorite = {},
         )
     }
 }

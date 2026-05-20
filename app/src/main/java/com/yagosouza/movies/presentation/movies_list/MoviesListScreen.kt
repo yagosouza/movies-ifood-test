@@ -21,12 +21,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -38,22 +34,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.yagosouza.movies.R
 import com.yagosouza.movies.data.remote.TmdbApi
+import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.presentation.components.ErrorState
 import com.yagosouza.movies.presentation.components.LoadingState
 import com.yagosouza.movies.presentation.components.VoteAverage
-import com.yagosouza.movies.domain.model.Movie
+import com.yagosouza.movies.presentation.theme.MoviesTheme
 
 private const val POSTER_ASPECT_RATIO = 2f / 3f
 private const val TITLE_MAX_LINES = 2
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoviesListScreen(
     onMovieClick: (Int) -> Unit,
@@ -61,35 +59,34 @@ fun MoviesListScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = stringResource(R.string.movies_list_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+    MoviesListContent(
+        uiState = uiState,
+        onMovieClick = onMovieClick,
+        onRetry = viewModel::loadMovies,
+        onLoadMore = viewModel::loadNextPage,
+    )
+}
+
+@Composable
+fun MoviesListContent(
+    uiState: MoviesListUiState,
+    onMovieClick: (Int) -> Unit,
+    onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
+            uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
+                message = uiState.errorMessage,
+                onRetry = onRetry,
             )
-        },
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-        ) {
-            when {
-                uiState.isLoading && uiState.movies.isEmpty() -> LoadingState()
-                uiState.errorMessage != null && uiState.movies.isEmpty() -> ErrorState(
-                    message = uiState.errorMessage.orEmpty(),
-                    onRetry = viewModel::loadMovies,
-                )
-                else -> MoviesGrid(
-                    movies = uiState.movies,
-                    isLoadingMore = uiState.isLoadingMore,
-                    onMovieClick = onMovieClick,
-                    onLoadMore = viewModel::loadNextPage,
-                )
-            }
+            else -> MoviesGrid(
+                movies = uiState.movies,
+                isLoadingMore = uiState.isLoadingMore,
+                onMovieClick = onMovieClick,
+                onLoadMore = onLoadMore,
+            )
         }
     }
 }
@@ -149,14 +146,15 @@ private fun MoviesGrid(
 }
 
 @Composable
-private fun MovieCard(
+fun MovieCard(
     movie: Movie,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val cornerRadius = dimensionResource(R.dimen.card_corner_radius)
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(cornerRadius),
@@ -198,4 +196,41 @@ private fun MovieCard(
     }
 }
 
+// region Previews
 
+private class MoviesListUiStateProvider : PreviewParameterProvider<MoviesListUiState> {
+    override val values = sequenceOf(
+        MoviesListUiState(isLoading = true),
+        MoviesListUiState(
+            movies = List(6) { index ->
+                Movie(
+                    id = index,
+                    title = "Filme Exemplo ${index + 1}",
+                    overview = "Sinopse do filme exemplo",
+                    posterPath = null,
+                    backdropPath = null,
+                    voteAverage = 7.5 + index * 0.3,
+                    releaseDate = "2024-01-01",
+                )
+            },
+        ),
+        MoviesListUiState(errorMessage = "Sem conexao com a internet"),
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MoviesListContentPreview(
+    @PreviewParameter(MoviesListUiStateProvider::class) uiState: MoviesListUiState,
+) {
+    MoviesTheme(dynamicColor = false) {
+        MoviesListContent(
+            uiState = uiState,
+            onMovieClick = {},
+            onRetry = {},
+            onLoadMore = {},
+        )
+    }
+}
+
+// endregion

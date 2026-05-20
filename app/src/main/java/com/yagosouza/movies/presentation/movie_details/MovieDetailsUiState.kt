@@ -6,4 +6,5 @@ data class MovieDetailsUiState(
     val isLoading: Boolean = false,
     val movie: Movie? = null,
     val errorMessage: String? = null,
+    val isFavorite: Boolean = false,
 )
