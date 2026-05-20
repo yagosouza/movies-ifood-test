@@ -20,6 +20,13 @@ interface TmdbApi {
         @Query("language") language: String = "pt-BR",
     ): MovieDetailDto
 
+    @GET("search/movie")
+    suspend fun searchMovies(
+        @Query("query") query: String,
+        @Query("page") page: Int,
+        @Query("language") language: String = "pt-BR",
+    ): MovieListResponse
+
     companion object {
         const val BASE_URL = "https://api.themoviedb.org/3/"
         const val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/"
