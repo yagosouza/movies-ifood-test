@@ -1,6 +1,6 @@
 package com.yagosouza.movies.di
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import com.yagosouza.movies.BuildConfig
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.data.remote.interceptor.AuthInterceptor
@@ -37,6 +37,12 @@ object NetworkModule {
     fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .header("Accept-Encoding", "identity")
+                    .build()
+                chain.proceed(request)
+            }
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
                     level = if (BuildConfig.DEBUG) {
