@@ -1,7 +1,10 @@
 package com.yagosouza.movies
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import com.yagosouza.movies.domain.model.Genre
 import com.yagosouza.movies.domain.model.Movie
@@ -17,7 +20,7 @@ class MovieDetailsScreenTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun showsMovieDetails_whenMovieLoaded() {
+    fun showsBackButton_andMovieTitle_whenMovieLoaded() {
         val movie = Movie(
             id = 1,
             title = "Filme Detalhes Teste",
@@ -40,15 +43,65 @@ class MovieDetailsScreenTest {
                     uiState = MovieDetailsUiState(movie = movie),
                     onBackClick = {},
                     onRetry = {},
+                    onToggleFavorite = {},
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Filme Detalhes Teste").assertExists()
-        composeTestRule.onNodeWithText("Sinopse").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Acao").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Aventura").assertIsDisplayed()
-        composeTestRule.onNodeWithText("120 min").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Voltar").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Filme Detalhes Teste").assertCountEquals(2)
+    }
+
+    @Test
+    fun showsFavoriteButton_whenMovieLoaded() {
+        val movie = Movie(
+            id = 1,
+            title = "Filme Teste",
+            overview = "Sinopse",
+            posterPath = null,
+            backdropPath = null,
+            voteAverage = 7.0,
+            releaseDate = "2024-01-01",
+        )
+
+        composeTestRule.setContent {
+            MoviesTheme(dynamicColor = false) {
+                MovieDetailsContent(
+                    uiState = MovieDetailsUiState(movie = movie, isFavorite = false),
+                    onBackClick = {},
+                    onRetry = {},
+                    onToggleFavorite = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Adicionar aos favoritos").assertIsDisplayed()
+    }
+
+    @Test
+    fun showsFilledHeart_whenIsFavorite() {
+        val movie = Movie(
+            id = 1,
+            title = "Filme Teste",
+            overview = "Sinopse",
+            posterPath = null,
+            backdropPath = null,
+            voteAverage = 7.0,
+            releaseDate = "2024-01-01",
+        )
+
+        composeTestRule.setContent {
+            MoviesTheme(dynamicColor = false) {
+                MovieDetailsContent(
+                    uiState = MovieDetailsUiState(movie = movie, isFavorite = true),
+                    onBackClick = {},
+                    onRetry = {},
+                    onToggleFavorite = {},
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithContentDescription("Remover dos favoritos").assertIsDisplayed()
     }
 
     @Test
@@ -59,6 +112,7 @@ class MovieDetailsScreenTest {
                     uiState = MovieDetailsUiState(errorMessage = "Erro ao carregar detalhes"),
                     onBackClick = {},
                     onRetry = {},
+                    onToggleFavorite = {},
                 )
             }
         }

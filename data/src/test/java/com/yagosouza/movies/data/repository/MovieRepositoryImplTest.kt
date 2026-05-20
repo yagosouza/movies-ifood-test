@@ -1,5 +1,6 @@
 package com.yagosouza.movies.data.repository
 
+import com.yagosouza.movies.data.local.dao.FavoriteMovieDao
 import com.yagosouza.movies.data.remote.TmdbApi
 import com.yagosouza.movies.data.remote.dto.GenreDto
 import com.yagosouza.movies.data.remote.dto.MovieDetailDto
@@ -15,12 +16,14 @@ import org.junit.Test
 class MovieRepositoryImplTest {
 
     private lateinit var api: TmdbApi
+    private lateinit var favoriteMovieDao: FavoriteMovieDao
     private lateinit var repository: MovieRepositoryImpl
 
     @Before
     fun setup() {
         api = mockk()
-        repository = MovieRepositoryImpl(api)
+        favoriteMovieDao = mockk()
+        repository = MovieRepositoryImpl(api, favoriteMovieDao)
     }
 
     @Test
@@ -73,5 +76,31 @@ class MovieRepositoryImplTest {
         assertEquals(1, result.genres.size)
         assertEquals("Action", result.genres[0].name)
         assertEquals(150, result.runtime)
+    }
+
+    @Test
+    fun `searchMovies maps DTOs to domain models`() = runTest {
+        val response = MovieListResponse(
+            page = 1,
+            results = listOf(
+                MovieDto(
+                    id = 5,
+                    title = "Search Result",
+                    overview = "Found movie",
+                    posterPath = "/search.jpg",
+                    backdropPath = null,
+                    voteAverage = 6.5,
+                    releaseDate = "2024-03-10",
+                ),
+            ),
+            totalPages = 1,
+            totalResults = 1,
+        )
+        coEvery { api.searchMovies("search", 1) } returns response
+
+        val result = repository.searchMovies("search", 1)
+
+        assertEquals(1, result.size)
+        assertEquals("Search Result", result[0].title)
     }
 }

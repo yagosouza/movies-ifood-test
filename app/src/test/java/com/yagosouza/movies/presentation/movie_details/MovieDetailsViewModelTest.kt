@@ -6,6 +6,8 @@ import com.yagosouza.movies.domain.Resource
 import com.yagosouza.movies.domain.model.Genre
 import com.yagosouza.movies.domain.model.Movie
 import com.yagosouza.movies.domain.usecase.GetMovieDetailsUseCase
+import com.yagosouza.movies.domain.usecase.IsFavoriteUseCase
+import com.yagosouza.movies.domain.usecase.ToggleFavoriteUseCase
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
@@ -28,11 +30,15 @@ class MovieDetailsViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var getMovieDetailsUseCase: GetMovieDetailsUseCase
+    private lateinit var toggleFavoriteUseCase: ToggleFavoriteUseCase
+    private lateinit var isFavoriteUseCase: IsFavoriteUseCase
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         getMovieDetailsUseCase = mockk()
+        toggleFavoriteUseCase = mockk()
+        isFavoriteUseCase = mockk()
     }
 
     @After
@@ -50,16 +56,22 @@ class MovieDetailsViewModelTest {
             backdropPath = "/backdrop.jpg",
             voteAverage = 8.5,
             releaseDate = "2024-06-15",
-            genres = listOf(Genre(id = 28, name = "Ação")),
+            genres = listOf(Genre(id = 28, name = "Acao")),
             runtime = 120,
         )
         every { getMovieDetailsUseCase(movieId = 42) } returns flowOf(
             Resource.Loading,
             Resource.Success(movie),
         )
+        every { isFavoriteUseCase(movieId = 42) } returns flowOf(false)
 
         val savedStateHandle = SavedStateHandle(mapOf("movieId" to 42))
-        val viewModel = MovieDetailsViewModel(getMovieDetailsUseCase, savedStateHandle)
+        val viewModel = MovieDetailsViewModel(
+            getMovieDetailsUseCase,
+            toggleFavoriteUseCase,
+            isFavoriteUseCase,
+            savedStateHandle,
+        )
 
         viewModel.uiState.test {
             awaitItem()
@@ -79,9 +91,15 @@ class MovieDetailsViewModelTest {
             Resource.Loading,
             Resource.Error("Not found"),
         )
+        every { isFavoriteUseCase(movieId = 99) } returns flowOf(false)
 
         val savedStateHandle = SavedStateHandle(mapOf("movieId" to 99))
-        val viewModel = MovieDetailsViewModel(getMovieDetailsUseCase, savedStateHandle)
+        val viewModel = MovieDetailsViewModel(
+            getMovieDetailsUseCase,
+            toggleFavoriteUseCase,
+            isFavoriteUseCase,
+            savedStateHandle,
+        )
 
         viewModel.uiState.test {
             awaitItem()

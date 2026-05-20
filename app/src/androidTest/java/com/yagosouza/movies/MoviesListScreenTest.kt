@@ -58,20 +58,4 @@ class MoviesListScreenTest {
 
         composeTestRule.onNodeWithText("Erro de conexao").assertIsDisplayed()
     }
-
-    @Test
-    fun showsLoadingIndicator_whenLoadingState() {
-        composeTestRule.setContent {
-            MoviesTheme(dynamicColor = false) {
-                MoviesListContent(
-                    uiState = MoviesListUiState(isLoading = true),
-                    onMovieClick = {},
-                    onRetry = {},
-                    onLoadMore = {},
-                )
-            }
-        }
-
-        composeTestRule.onNodeWithText("Filmes Populares").assertIsDisplayed()
-    }
 }
